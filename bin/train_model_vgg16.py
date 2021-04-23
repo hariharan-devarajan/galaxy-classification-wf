@@ -250,11 +250,8 @@ def get_data_loader(prefix):
     """
     data_transforms  = transforms.Compose([ToTensorRescale()])
 
-    if prefix == "train":       
-        val_data     = GalaxyDataset( VAL_DATA_PATH, prefix = "val",use_cache=False,transform= data_transforms)
+    if prefix == "trainval":       
         train_data   = GalaxyDataset( TRAIN_DATA_PATH ,prefix = prefix, use_cache=False,transform = data_transforms)
-#        train_data   = torch.utils.data.ConcatDataset([train_data,val_data])
-# TODO - both train and val should be loaded
         train_loader = torch.utils.data.DataLoader(train_data, num_workers = 0, batch_size = BATCH_SIZE, shuffle=True)      
         return train_loader
     
@@ -271,7 +268,7 @@ def train_model(best_params):
     
     print("Training model")
     
-    train_loader = get_data_loader("train")
+    train_loader = get_data_loader("trainval")
     val_loader   = get_data_loader("test")
 
     layer   = best_params["layer"]
