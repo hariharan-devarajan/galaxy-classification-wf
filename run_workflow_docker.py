@@ -45,14 +45,15 @@ galaxy_container = Container(
             'crisis_container',
             Container.DOCKER,
             image = "docker://patkraw/galaxy-wf:latest",
-            arguments="--runtime=nvidia --shm-size=1gb"
+            arguments="--shm-size=256mb"
 ).add_env(TORCH_HOME="/tmp")
 
 # Script that resizes all the images
 preprocess_images = Transformation(
                         "preprocess_images",site = "local",
                         pfn = os.path.join(os.getcwd(), "bin/preprocess_resize.py"), 
-                        is_stageable = True,container = galaxy_container
+                        is_stageable = True,
+                        container = galaxy_container
                     )
 # Script that augments the files of class 2 and 3
 
