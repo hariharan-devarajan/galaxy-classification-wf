@@ -61,7 +61,7 @@ def add_augmented_images(class_str, num, start_num):
     return augmented_files
 
 
-<<<<<<< HEAD
+
 def create_files_hpo(input_files):
     files = []
     for file in input_files:
@@ -69,24 +69,6 @@ def create_files_hpo(input_files):
         files.append(name)
     return files
 
-=======
-# define container for the jobs
-galaxy_container = Container(
-            'crisis_container',
-            Container.DOCKER,
-            image = "docker://patkraw/galaxy-wf:latest",
-            arguments="--shm-size=256mb"
-).add_env(TORCH_HOME="/tmp")
-
-# Script that resizes all the images
-preprocess_images = Transformation(
-                        "preprocess_images",site = "local",
-                        pfn = os.path.join(os.getcwd(), "bin/preprocess_resize.py"), 
-                        is_stageable = True,
-                        container = galaxy_container
-                    )
-# Script that augments the files of class 2 and 3
->>>>>>> d55ec72d0f915a519991afcd22ae3ba942e1f6a2
 
 def add_prefix(file_paths, prefix):
     new_paths = []
