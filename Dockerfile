@@ -24,18 +24,3 @@ RUN pip3 install \
     scikit-plot \
     torch-summary
 
-RUN mkdir ./bin
-COPY preprocess_resize.py ./bin
-RUN chmod 777 ./bin/preprocess_resize.py
-COPY preprocess_augment.py ./bin
-RUN chmod 777 ./bin/preprocess_augment.py
-COPY vgg16_hpo.py ./bin
-RUN chmod 777 ./bin/vgg16_hpo.py
-COPY data_loader.py ./bin
-RUN chmod 777 ./bin/data_loader.py
-COPY model_selection.py ./bin
-RUN chmod 777 ./bin/model_selection.py
-COPY train_model.py ./bin
-RUN chmod 777 ./bin/train_model.py
-COPY eval_model.py ./bin
-RUN chmod 777 ./bin/eval_model.py

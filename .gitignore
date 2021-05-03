@@ -2,7 +2,6 @@ wf-output/
 wf-scratch/
 scitech/
 10_percent_data/
-galaxy-zoo-the-galaxy-challenge/
 *.ipynb
 pegasus.properties
 *.dot
