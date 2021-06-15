@@ -11,7 +11,6 @@ import time
 import argparse
 import random
 
-
 logging.basicConfig(level=logging.DEBUG)
 
 # 10 percent of data (this will need to be replade
@@ -98,13 +97,6 @@ def create_output_file_names(class_str, img_per_class):
         output_files.append("class_{}_{}.jpg".format(class_str,j))
     return output_files
 
-
-
-
-
-
-
-
 def run_workflow(DATA_PATH):
     props = Properties()
     props["pegasus.mode"] = "development"
@@ -148,7 +140,6 @@ def run_workflow(DATA_PATH):
                     style="ssh",
                     data_configuration="nonsharedfs",
                     change_dir="true",
-                    #auxillary_local="false",
                     queue="donut-default",
                     cores=1,
                     gpus=1,
@@ -255,8 +246,12 @@ def run_workflow(DATA_PATH):
                    is_stageable= True,
                    container=galaxy_container
                 )\
+<<<<<<< HEAD
                 .add_pegasus_profile(cores=8, gpus=1, runtime=43200, grid_start_arguments="-G -m 10")\
                 .add_env(key="KICKSTART_MON_GRAPHICS_PCIE", value="TRUE")
+=======
+                .add_pegasus_profile(cores=8, gpus=1, runtime=MAXTIMEWALL*60)
+>>>>>>> fe548b31bf2a131910f8c1da433d5c7d498242f8
 
     # Train Model
     train_model = Transformation("train_model",
@@ -422,7 +417,6 @@ def main():
     NUM_CLASS_2 = ARGS.num_class_2
     NUM_CLASS_3 = ARGS.num_class_3
     MAXTIMEWALL = ARGS.maxwalltime
-
 
     np.random.seed(SEED)
 
