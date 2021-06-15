@@ -246,12 +246,8 @@ def run_workflow(DATA_PATH):
                    is_stageable= True,
                    container=galaxy_container
                 )\
-<<<<<<< HEAD
-                .add_pegasus_profile(cores=8, gpus=1, runtime=43200, grid_start_arguments="-G -m 10")\
+                .add_pegasus_profile(cores=16, gpus=1, runtime=14400, grid_start_arguments="-G -m 10")\
                 .add_env(key="KICKSTART_MON_GRAPHICS_PCIE", value="TRUE")
-=======
-                .add_pegasus_profile(cores=8, gpus=1, runtime=MAXTIMEWALL*60)
->>>>>>> fe548b31bf2a131910f8c1da433d5c7d498242f8
 
     # Train Model
     train_model = Transformation("train_model",
@@ -260,7 +256,7 @@ def run_workflow(DATA_PATH):
                       is_stageable= True, 
                       container=galaxy_container
                   )\
-                  .add_pegasus_profile(cores=8, gpus=1, runtime=43200, grid_start_arguments="-G -m 10")\
+                  .add_pegasus_profile(cores=16, gpus=1, runtime=14400, grid_start_arguments="-G -m 10")\
                   .add_env(key="KICKSTART_MON_GRAPHICS_PCIE", value="TRUE")
 
     # Eval Model
@@ -270,7 +266,7 @@ def run_workflow(DATA_PATH):
                      is_stageable= True, 
                      container=galaxy_container
                  )\
-                .add_pegasus_profile(cores=8, gpus=1, runtime=43200, grid_start_arguments="-G -m 10")\
+                .add_pegasus_profile(cores=1, gpus=1, runtime=600, grid_start_arguments="-G -m 10")\
                 .add_env(key="KICKSTART_MON_GRAPHICS_PCIE", value="TRUE")
 
     tc.add_containers(galaxy_container)
