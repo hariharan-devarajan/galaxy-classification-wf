@@ -162,8 +162,7 @@ def test_model(best_params):
 
 
 def load_checkpoint(model):
-    checkpoint = torch.load(FINAL_CHECKPOINT_PATH)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(torch.load(FINAL_CHECKPOINT_PATH))
     return model
 
 
