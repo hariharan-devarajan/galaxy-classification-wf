@@ -1,8 +1,8 @@
 digraph G {
     subgraph cluster_input_data {
-        input_images
+        input_images [shape=box]
         
-        label="input data"
+        label="input data (split into train, val, test)"
     }
     
     subgraph cluster_preprocess_jobs {
@@ -10,7 +10,7 @@ digraph G {
         preprocess_1
         preprocess_2
         
-        label="input files (evenly divided amongs NUM_WORKERS)"
+        label="input files evenly divided amongs NUM_WORKERS"
     }
     
     input_images -> preprocess_0
@@ -24,8 +24,9 @@ digraph G {
         label="images to be augmented"
     }
     
-
-    all_other_processed_images [shape=box]
+    train_processed_images [shape=box]
+    val_processed_images [shape=box]
+    test_processed_images [shape=box]
     
     preprocess_0 -> train_class_2_processed_images
     preprocess_1 -> train_class_2_processed_images
@@ -34,9 +35,17 @@ digraph G {
     preprocess_1 -> train_class_3_processed_images
     preprocess_2 -> train_class_3_processed_images
     
-    preprocess_0 -> all_other_processed_images
-    preprocess_1 -> all_other_processed_images
-    preprocess_2 -> all_other_processed_images
+    preprocess_0 -> train_processed_images
+    preprocess_0 -> val_processed_images
+    preprocess_0 -> test_processed_images
+    
+    preprocess_1 -> train_processed_images
+    preprocess_1 -> val_processed_images
+    preprocess_1 -> test_processed_images
+    
+    preprocess_2 -> train_processed_images
+    preprocess_2 -> val_processed_images
+    preprocess_2 -> test_processed_images
 
     train_class_2_processed_images -> augment_class_2_images
     train_class_3_processed_images -> augment_class_3_images
@@ -49,7 +58,9 @@ digraph G {
     
     additional_train_class_2_processed_images -> vgg16_hpo
     additional_train_class_3_processed_images -> vgg16_hpo
-    all_other_processed_images -> vgg16_hpo 
+    
+    train_processed_images -> vgg16_hpo
+    val_processed_images -> vgg16_hpo
     
     "hpo_galaxy_vgg16.pkl" [shape=box]
     "best_vgg16_hpo_params.txt" [shape=box]
@@ -59,7 +70,9 @@ digraph G {
     
     additional_train_class_2_processed_images -> train_model
     additional_train_class_3_processed_images -> train_model
-    all_other_processed_images -> train_model
+    
+    train_processed_images -> train_model
+    val_processed_images -> train_model 
     
     "hpo_galaxy_vgg16.pkl" -> train_model
     "best_vgg16_hpo_params.txt" -> train_model
@@ -73,6 +86,7 @@ digraph G {
     train_model -> "loss_vgg16.png"
     
     "final_vgg16_model.pth" -> eval_model
+    test_processed_images -> eval_model 
     
     "exp_results.csv" [shape=box]
     "final_confusion_matrix_norm.png" [shape=box]
@@ -80,5 +94,6 @@ digraph G {
     eval_model -> "exp_results.csv"
     eval_model -> "final_confusion_matrix_norm.png"
     
-    
+    label="Galaxy Classification Workflow"
+    labelloc="t"
 }
