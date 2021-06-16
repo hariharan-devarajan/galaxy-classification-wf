@@ -1,6 +1,7 @@
 
 # Galaxy Classification Workflow
 
+![img](simple_graph.png)
 
 ![img](Galaxy-Decaf-Pegasus.png)
 
