@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import io
 import glob
 import random
 import torchvision

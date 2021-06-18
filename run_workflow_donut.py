@@ -143,7 +143,7 @@ def run_workflow(DATA_PATH):
                     change_dir="true",
                     queue="donut-default",
                     cores=8,
-                    runtime=3600,
+                    runtime=4800,
                     grid_start_arguments="-m 10"
                 )\
                 .add_profiles(Namespace.PEGASUS, key="SSH_PRIVATE_KEY", value="${HOME}/.ssh/bosco_key.rsa")\
