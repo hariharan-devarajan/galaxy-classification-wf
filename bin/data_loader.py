@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import io
 import glob
 import random
+from skimage import io
 import torchvision
 from torch.utils.data import Dataset
 import torchvision.transforms.functional as TF
