@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 
-import glob, os
-import random
-import torch
+import glob
 import random
 import torchvision
-from skimage import io, transform
 from torch.utils.data import Dataset
 import torchvision.transforms.functional as TF
-import random
 
 
 

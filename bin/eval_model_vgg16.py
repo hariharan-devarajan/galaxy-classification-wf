@@ -1,23 +1,14 @@
 #!/usr/bin/env python3
 import torch
 import argparse
-import torchvision
 import os
-import joblib
 import sys
-from torch.utils.data import Dataset, DataLoader
-from torch.autograd import Variable
-from PIL import Image
 import seaborn as sns
 import numpy as np
 import time
-import scikitplot as skplt
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-from torchsummary import summary
 import torchvision.transforms as transforms
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
-import gc
 import logging
 import time
 from model_selection import EarlyStopping, VGG16Model
@@ -46,8 +37,8 @@ IMG_SIZE = [256, 256]
 tensor   = (3,256, 256) # this is to predict the in_features of FC Layers
 
 # TO ADD if memory issues encounter
-gc.collect()
-torch.cuda.empty_cache()
+#gc.collect()
+#torch.cuda.empty_cache()
 
 ### ------------------------- LOGGER--------------------------------
 logger = logging.getLogger('optuna_db_log')
@@ -162,8 +153,11 @@ def test_model(best_params):
 
 
 def load_checkpoint(model):
+    #try:
     checkpoint = torch.load(FINAL_CHECKPOINT_PATH)
     model.load_state_dict(checkpoint['model_state_dict'])
+    #except Exception as e:
+    #    print(e)
     return model
 
 

@@ -2,21 +2,13 @@
 
 import torch
 import argparse
-import torchvision
 import os
-import joblib
-import sys
-from torch.utils.data import Dataset, DataLoader
-from PIL import Image
 import seaborn as sns
 import numpy as np
-import time
 import scikitplot as skplt
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from torchsummary import summary
 import torchvision.transforms as transforms
-import gc
 import logging
 import time
 from model_selection import EarlyStopping, VGG16Model
@@ -52,8 +44,8 @@ PATIENCE = 4
 
 
 # TO ADD if memory issues encounter
-gc.collect()
-torch.cuda.empty_cache()
+#gc.collect()
+#torch.cuda.empty_cache()
 
 
 
@@ -317,7 +309,7 @@ def train_model(best_params):
             print("Validation loss: {0:.4f}  Validation Accuracy: {1:0.2f}".format(epoch_val_loss, epoch_val_acc))
             print("--------------------------------------------------------")
            
-            early_stop(epoch_val_loss, model)
+            early_stop(epoch_val_loss, model, optimizer, epoch, layer)
             restart = False
         
             if early_stop.early_stop:

@@ -1,26 +1,9 @@
 #!/usr/bin/env python3
-
 import torch
-import argparse
 import torchvision
-import os
-import optuna
-import joblib
-import sys
-from torch.utils.data import Dataset, DataLoader
-from PIL import Image
-import seaborn as sns
 import numpy as np
-import time
-import scikitplot as skplt
-import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-from torchsummary import summary
-import gc
-import time
 
 tensor = (3,256, 256)
-
 
 # VGG16trained model Architecture
 
@@ -101,13 +84,14 @@ class EarlyStopping:
         self.delta = delta
         self.path = path
     
-    def __call__(self, val_loss, model):
+    def __call__(self, val_loss, model, optimizer, epoch, layer):
         
         score = -val_loss
         
         if self.best_score is None:
             self.best_score = score
             self.save_checkpoint(val_loss, model)
+            self.val_loss_min = val_loss
             
         elif score < self.best_score + self.delta:
             self.counter += 1
@@ -118,12 +102,16 @@ class EarlyStopping:
         else:
             self.best_score = score
             self.save_checkpoint(val_loss, model)
+            self.val_loss_min = val_loss
             self.counter = 0   
     
-    def save_checkpoint(self, val_loss, model):
+    def save_checkpoint(self, model, optimizer, epoch, layer):
         """
         saves the current best version of the model if there is decrease in validation loss
         """
-        torch.save(model.state_dict(), self.path)
-        self.vall_loss_min = val_loss
+        torch.save({
+            'epoch': epoch,
+            'layer': layer,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict()}, self.path)
         

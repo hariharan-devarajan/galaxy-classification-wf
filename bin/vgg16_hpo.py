@@ -1,25 +1,15 @@
 #!/usr/bin/env python3
 import torch
 import argparse
-import torchvision
-import os
 import optuna
 import joblib
-import sys
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import WeightedRandomSampler
-from PIL import Image
-import seaborn as sns
 import numpy as np
 import time
 import scikitplot as skplt
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from torchsummary import summary
 import torchvision.transforms as transforms
-import gc
 import logging
-import time
 from model_selection import EarlyStopping, VGG16Model
 from data_loader import GalaxyDataset
 
@@ -47,8 +37,8 @@ PATIENCE = 4
 
 
 # TO ADD if memory issues encounter
-gc.collect()
-torch.cuda.empty_cache()
+#gc.collect()
+#torch.cuda.empty_cache()
 
 
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import random
-from PIL import Image
 import numpy as np
-import glob, os
+import glob
 import cv2
 import argparse
 import time

@@ -77,6 +77,7 @@ def add_prefix(file_paths, prefix):
 def split_data_filenames(file_paths,seed):
     random.seed(seed)
     random.shuffle(file_paths)
+    print(len(file_paths))
     train, val, test = np.split(file_paths, [int(len(file_paths)*0.8), int(len(file_paths)*0.9)])
     return train, val, test
 
@@ -87,7 +88,7 @@ def get_files(all_images_paths,rc):
     for image_path in all_images_paths:
         image_file = image_path.split("/")[-1]
         input_images.append(File(image_file))
-        rc.add_replica("local", image_file,  os.path.join(os.getcwd(), image_path))
+        rc.add_replica("donut", image_file, os.path.join("/nas/home/georgpap/datasets/galaxy-wf/data", image_file))
     return input_images
 
 
@@ -141,8 +142,7 @@ def run_workflow(DATA_PATH):
                     data_configuration="nonsharedfs",
                     change_dir="true",
                     queue="donut-default",
-                    cores=1,
-                    gpus=1,
+                    cores=8,
                     runtime=3600,
                     grid_start_arguments="-m 10"
                 )\
@@ -164,7 +164,7 @@ def run_workflow(DATA_PATH):
     input_images       = get_files(full_galaxy_images,rc)
     
     metadata_file      = 'training_solutions_rev1.csv'
-    rc.add_replica("local", metadata_file,  os.path.join(os.getcwd(), metadata_file))
+    rc.add_replica("local", metadata_file,  os.path.join(os.getcwd(), "config", metadata_file))
 
     dataset_class_0 = create_output_file_names(0,MAX_IMG_0)
     dataset_class_1 = create_output_file_names(1,MAX_IMG_1)
@@ -175,7 +175,7 @@ def run_workflow(DATA_PATH):
     dataset_class = dataset_class_0 + dataset_class_1 + dataset_class_2 + dataset_class_3 + dataset_class_4
     dataset_class.sort()
 
-    train, val, test = split_data_filenames(dataset_class,SEED)
+    train, val, test = split_data_filenames(dataset_class, SEED)
 
     pf_train = add_prefix(train, "train")
     pf_val   = add_prefix(val, "val")
@@ -198,15 +198,13 @@ def run_workflow(DATA_PATH):
 
     # FILES FOR vgg16_hpo.py VGG 16
     #--------------------------------------------------------------------------------------------------------
-    vgg16_pkl = create_pkl("hpo_galaxy_vgg16.pkl")
-    vgg16_pkl_file = File(vgg16_pkl)
-    rc.add_replica("local", vgg16_pkl, os.path.join(os.getcwd(), vgg16_pkl))    
+    vgg16_pkl_file = File("hpo_galaxy_vgg16.pkl")
+    rc.add_replica("local", vgg16_pkl_file, os.path.join(os.getcwd(), "config", vgg16_pkl_file.lfn))    
 
     # FILES FOR train_model.py 
     #--------------------------------------------------------------------------------------------------------
-    checkpoint_vgg16_pkl = create_pkl("checkpoint_vgg16.pkl")
-    checkpoint_vgg16_pkl_file = File(checkpoint_vgg16_pkl)
-    rc.add_replica("local",checkpoint_vgg16_pkl, os.path.join(os.getcwd(), checkpoint_vgg16_pkl))
+    checkpoint_vgg16_pkl_file = File("checkpoint_vgg16.pkl")
+    rc.add_replica("local", checkpoint_vgg16_pkl_file, os.path.join(os.getcwd(), "config", checkpoint_vgg16_pkl_file.lfn))
 
     rc.write()
 
@@ -258,6 +256,7 @@ def run_workflow(DATA_PATH):
                   )\
                   .add_pegasus_profile(cores=16, gpus=1, runtime=14400, grid_start_arguments="-G -m 10")\
                   .add_env(key="KICKSTART_MON_GRAPHICS_PCIE", value="TRUE")
+                  #.add_env(key="KICKSTART_MON_GRAPHICS_UTIL", value="TRUE")
 
     # Eval Model
     eval_model = Transformation("eval_model",
@@ -266,7 +265,7 @@ def run_workflow(DATA_PATH):
                      is_stageable= True, 
                      container=galaxy_container
                  )\
-                .add_pegasus_profile(cores=1, gpus=1, runtime=600, grid_start_arguments="-G -m 10")\
+                .add_pegasus_profile(cores=8, gpus=1, runtime=600, grid_start_arguments="-G -m 10")\
                 .add_env(key="KICKSTART_MON_GRAPHICS_PCIE", value="TRUE")
 
     tc.add_containers(galaxy_container)
@@ -286,7 +285,8 @@ def run_workflow(DATA_PATH):
 
     job_create_dataset = Job(create_dataset)\
                         .add_args("--seed {} --max_img {}".format(SEED, 10000))\
-                        .add_inputs(*input_images, File(metadata_file))\
+                        .add_inputs(*input_images, bypass_staging=True)\
+                        .add_inputs(metadata_file)\
                         .add_outputs(*output_files )
 
     job_preprocess_images = [Job(preprocess_images) for i in range(NUM_WORKERS)]
