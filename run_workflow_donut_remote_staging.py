@@ -1,25 +1,14 @@
 #!/usr/bin/env python3
 
-import glob 
 import os
-import numpy as np
 from Pegasus.api import *
 from pathlib import Path
 import logging
-import pickle
 import time
 import argparse
-import random
+from bin.GalaxyDataset import GalaxyDataset
 
 logging.basicConfig(level=logging.DEBUG)
-
-# 10 percent of data (this will need to be replade
-# by actual number to run with full dataset)
-#MAX_IMG_0 = 84
-#MAX_IMG_1 = 80
-#MAX_IMG_2 = 8
-#MAX_IMG_3 = 39
-#MAX_IMG_4 = 78
 
 #full dataset
 MAX_IMG_0 = 8436
@@ -27,13 +16,6 @@ MAX_IMG_1 = 8069
 MAX_IMG_2 = 579
 MAX_IMG_3 = 3903
 MAX_IMG_4 = 7806
-
-def create_pkl(name):
-    pkl_filename = name
-    file = open(pkl_filename, 'ab')
-    pickle.dump("", file, pickle.HIGHEST_PROTOCOL)
-    return pkl_filename
-
 
 
 def split_preprocess_jobs(preprocess_images_job, input_images, postfix):
@@ -66,36 +48,6 @@ def create_files_hpo(input_files):
         files.append(name)
     return files
 
-
-def add_prefix(file_paths, prefix):
-    new_paths = []
-    for fpath in file_paths:
-        new_paths.append(prefix + "_" + fpath)
-    return new_paths
-
-
-def split_data_filenames(file_paths,seed):
-    random.seed(seed)
-    random.shuffle(file_paths)
-    train, val, test = np.split(file_paths, [int(len(file_paths)*0.8), int(len(file_paths)*0.9)])
-    return train, val, test
-
-
-
-def get_files(all_images_paths,rc):
-    input_images  = []
-    for image_path in all_images_paths:
-        image_file = image_path.split("/")[-1]
-        input_images.append(File(image_file))
-        rc.add_replica("local", image_file,  os.path.join(os.getcwd(), image_path))
-    return input_images
-
-
-def create_output_file_names(class_str, img_per_class):
-    output_files = []
-    for j in range(img_per_class):
-        output_files.append("class_{}_{}.jpg".format(class_str,j))
-    return output_files
 
 def run_workflow(DATA_PATH):
     props = Properties()
@@ -142,8 +94,7 @@ def run_workflow(DATA_PATH):
                     change_dir="true",
                     queue="donut-default",
                     cores=8,
-                    gpus=1,
-                    runtime=3600,
+                    runtime=4800,
                     grid_start_arguments="-m 10"
                 )\
                 .add_profiles(Namespace.PEGASUS, key="SSH_PRIVATE_KEY", value="${HOME}/.ssh/bosco_key.rsa")\
@@ -158,32 +109,20 @@ def run_workflow(DATA_PATH):
     ### ADD INPUT FILES TO REPILCA CATALOG
     #-------------------------------------------------------------------------------------------------------
     rc = ReplicaCatalog()
-
-
-    full_galaxy_images = glob.glob(DATA_PATH + "*.jpg")
-    input_images       = get_files(full_galaxy_images,rc)
     
-    metadata_file      = 'training_solutions_rev1.csv'
-    rc.add_replica("local", metadata_file,  os.path.join(os.getcwd(), metadata_file))
-
-    dataset_class_0 = create_output_file_names(0,MAX_IMG_0)
-    dataset_class_1 = create_output_file_names(1,MAX_IMG_1)
-    dataset_class_2 = create_output_file_names(2,MAX_IMG_2)
-    dataset_class_3 = create_output_file_names(3,MAX_IMG_3)
-    dataset_class_4 = create_output_file_names(4,MAX_IMG_4)
-
-    dataset_class = dataset_class_0 + dataset_class_1 + dataset_class_2 + dataset_class_3 + dataset_class_4
-    dataset_class.sort()
-
-    train, val, test = split_data_filenames(dataset_class,SEED)
-
-    pf_train = add_prefix(train, "train")
-    pf_val   = add_prefix(val, "val")
-    pf_test  = add_prefix(test, "test")
-
-    output_images = pf_train + pf_val + pf_test
-    output_files = [File(i) for i in output_images]  
-
+    metadata_file      = 'config/training_solutions_rev1.csv'
+    available_images     = 'config/full_galaxy_data.log'
+    
+    galaxy_dataset = GalaxyDataset([MAX_IMG_0, MAX_IMG_1, MAX_IMG_2, MAX_IMG_3, MAX_IMG_4], SEED, metadata_file, available_images)
+    dataset_mappings = galaxy_dataset.generate_dataset()
+    print(len(dataset_mappings))
+    
+    output_images = []
+    output_files = []
+    for m in dataset_mappings:
+        output_images.append(m[1])
+        output_files.append(File(m[1]))
+        rc.add_replica("local", m[1], os.path.join(DATA_PATH, m[0]))
 
     # ADDITIONAL PYTHON SCRIPS NEEDED BY TUNE_MODEL
     #-------------------------------------------------------------------------------------------------------
@@ -198,15 +137,13 @@ def run_workflow(DATA_PATH):
 
     # FILES FOR vgg16_hpo.py VGG 16
     #--------------------------------------------------------------------------------------------------------
-    vgg16_pkl = create_pkl("hpo_galaxy_vgg16.pkl")
-    vgg16_pkl_file = File(vgg16_pkl)
-    rc.add_replica("local", vgg16_pkl, os.path.join(os.getcwd(), vgg16_pkl))    
+    vgg16_pkl_file = File("hpo_galaxy_vgg16.pkl")
+    rc.add_replica("local", vgg16_pkl_file, os.path.join(os.getcwd(), "config", vgg16_pkl_file.lfn))    
 
     # FILES FOR train_model.py 
     #--------------------------------------------------------------------------------------------------------
-    checkpoint_vgg16_pkl = create_pkl("checkpoint_vgg16.pkl")
-    checkpoint_vgg16_pkl_file = File(checkpoint_vgg16_pkl)
-    rc.add_replica("local",checkpoint_vgg16_pkl, os.path.join(os.getcwd(), checkpoint_vgg16_pkl))
+    checkpoint_vgg16_pkl_file = File("checkpoint_vgg16.pkl")
+    rc.add_replica("local", checkpoint_vgg16_pkl_file, os.path.join(os.getcwd(), "config", checkpoint_vgg16_pkl_file.lfn))
 
     rc.write()
 
@@ -223,11 +160,6 @@ def run_workflow(DATA_PATH):
                 image_site = "local",
                 mounts=["${DONUT_USER_HOME}:${DONUT_USER_HOME}"]
     ).add_env(TORCH_HOME="/tmp")
-
-    # Data Aqusition: Create Dataset
-    create_dataset = Transformation("create_dataset", site="local",
-                                    pfn = str(Path(".").parent.resolve() / "bin/create_dataset.py"), 
-                                    is_stageable= True, container=galaxy_container)  
 
     # Data preprocessing part 1: image resize
     preprocess_images = Transformation("preprocess_images", site="local",
@@ -271,7 +203,6 @@ def run_workflow(DATA_PATH):
 
     tc.add_containers(galaxy_container)
     tc.add_transformations(
-        create_dataset,
         preprocess_images,
         augment_images,
         vgg16_hpo,
@@ -283,11 +214,6 @@ def run_workflow(DATA_PATH):
     ## CREATE WORKFLOW
     #---------------------------------------------------------------------------------------------------------
     wf = Workflow('Galaxy-Classification-Workflow-Donut')
-
-    job_create_dataset = Job(create_dataset)\
-                        .add_args("--seed {} --max_img {}".format(SEED, 10000))\
-                        .add_inputs(*input_images, File(metadata_file))\
-                        .add_outputs(*output_files )
 
     job_preprocess_images = [Job(preprocess_images) for i in range(NUM_WORKERS)]
     resized_images = split_preprocess_jobs(job_preprocess_images, output_files, "_proc")
@@ -356,8 +282,7 @@ def run_workflow(DATA_PATH):
 
 
     ## ADD JOBS TO THE WORKFLOW
-    wf.add_jobs(job_create_dataset,
-                *job_preprocess_images,job_augment_class_2 ,job_augment_class_3, job_vgg16_hpo,\
+    wf.add_jobs(*job_preprocess_images,job_augment_class_2 ,job_augment_class_3, job_vgg16_hpo,\
                 job_train_model,job_eval_model)  
 
 
@@ -386,7 +311,6 @@ def main():
     global NUM_WORKERS
     global NUM_CLASS_2
     global NUM_CLASS_3
-    global MAXTIMEWALL
 
     
     parser = argparse.ArgumentParser(description="Galaxy Classification")   
@@ -398,7 +322,6 @@ def main():
     parser.add_argument('--num_workers', type=int, default= 20, help = "number of workers")
     parser.add_argument('--num_class_2', type=int, default= 7000, help = "number of augmented class 2 files")
     parser.add_argument('--num_class_3', type=int, default= 4000, help = "number of augmented class 3 files")
-    parser.add_argument('--maxwalltime', type=int, default= 30, help = "maxwalltime")
 
     
 
@@ -412,9 +335,6 @@ def main():
     NUM_WORKERS = ARGS.num_workers
     NUM_CLASS_2 = ARGS.num_class_2
     NUM_CLASS_3 = ARGS.num_class_3
-    MAXTIMEWALL = ARGS.maxwalltime
-
-    np.random.seed(SEED)
 
     run_workflow(DATA_PATH)
     

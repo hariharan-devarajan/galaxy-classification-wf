@@ -1,6 +1,5 @@
 FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
-RUN apt-get update
-RUN apt-get install ffmpeg libsm6 libxext6 curl wget -y
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 curl wget openssh-client -y
 RUN mkdir app
 WORKDIR /app
 
