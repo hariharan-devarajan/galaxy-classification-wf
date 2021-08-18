@@ -84,10 +84,9 @@ def run_workflow(DATA_PATH):
                     style="condor",
                     data_configuration="nonsharedfs",
                     auxillary_local="true",
-                    cores=24,
-                    gpus=1,
-                    memory=131072,
-                    runtime=43200,
+                    cores=8,
+                    memory=2048,
+                    runtime=4800,
                     grid_start_arguments="-m 10",
                     SSH_PRIVATE_KEY="/home/panorama/.ssh/storage_key"
                 )\
